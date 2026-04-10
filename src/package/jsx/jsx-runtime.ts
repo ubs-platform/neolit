@@ -1,24 +1,52 @@
-import { NeolitChild, NeolitComponent } from "@ubs-platform/neolit/core";
+import { NeolitChild, NeolitComponent, NeolitNode, State } from "@ubs-platform/neolit/core";
 
 
 type ComponentConstructor = new () => NeolitComponent;
 type Tag = string | ComponentConstructor;
 type Props = Record<string, unknown> | null;
 
+export interface ComponentRenderResult {
+    componentInstance: NeolitComponent;
+    element: NeolitNode;
+}
+
+type JsxChild = NeolitChild | ComponentRenderResult;
+
 function normalizeChild(child: NeolitChild): Node {
     if (child === null || child === undefined) return document.createTextNode("");
+    if (child instanceof State) {
+        return document.createTextNode(child.toString());
+    }
     if (typeof child === "string" || typeof child === "number") {
         return document.createTextNode(String(child));
     }
-    return child;
+    return child as Node;
 }
 
-export function jsx(tag: Tag, props: Props & { children?: NeolitChild | NeolitChild[] }): HTMLElement {
+function isComponentRenderResult(value: JsxChild): value is ComponentRenderResult {
+    return typeof value === "object"
+        && value !== null
+        && "componentInstance" in value
+        && "element" in value;
+}
+
+function appendJsxChild(parent: HTMLElement, child: JsxChild): void {
+    if (isComponentRenderResult(child)) {
+        child.componentInstance.mount(parent, child.element);
+        return;
+    }
+
+    parent.appendChild(normalizeChild(child));
+}
+
+export function jsx(tag: ComponentConstructor, props: Props & { children?: JsxChild[] | JsxChild }): ComponentRenderResult;
+export function jsx(tag: string, props: Props & { children?: JsxChild[] | JsxChild }): HTMLElement;
+export function jsx(tag: Tag, props: Props & { children?: JsxChild[] | JsxChild }): ComponentRenderResult | HTMLElement {
     const { children, ...attrs } = props ?? {};
 
     if (typeof tag === "function") {
         const instance = new tag();
-        return instance.render();
+        return { componentInstance: instance, element: instance.render() };
     }
 
     const el = document.createElement(tag);
@@ -33,9 +61,9 @@ export function jsx(tag: Tag, props: Props & { children?: NeolitChild | NeolitCh
     }
 
     if (Array.isArray(children)) {
-        children.forEach(child => el.appendChild(normalizeChild(child)));
+        children.forEach(child => appendJsxChild(el, child));
     } else if (children !== undefined) {
-        el.appendChild(normalizeChild(children));
+        appendJsxChild(el, children);
     }
 
     return el;

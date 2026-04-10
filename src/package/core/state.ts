@@ -17,7 +17,21 @@ export class State<DATA> {
         this.changeListeners.forEach(listener => listener(newData));
     }
 
+    update(updater: (currentData: DATA) => DATA): void {
+        this.data = updater(this.data);
+
+        this.changeListeners.forEach(listener => listener(this.data));
+    }
+
     subscribe(listener: (newData: DATA) => void): void {
         this.changeListeners.push(listener);
     }
+
+    toString(): string {
+        return this.data?.toString() ?? "";   
+    }
+}
+
+export function state<DATA>(initialData: DATA): State<DATA> {
+    return new State(initialData);
 }

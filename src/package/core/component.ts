@@ -16,10 +16,15 @@ export abstract class NeolitComponent {
         state.subscribe(() => this._rerender());
     }
 
-    mount(target: HTMLElement): void {
+    mount(target: HTMLElement, initialElement?: NeolitNode): NeolitNode {
         this._mountTarget = target;
-        this._currentElement = this.render();
-        target.appendChild(this._currentElement);
+        this._currentElement = initialElement ?? this.render();
+
+        if (!target.contains(this._currentElement)) {
+            target.appendChild(this._currentElement);
+        }
+
+        return this._currentElement;
     }
 
     private _rerender(): void {

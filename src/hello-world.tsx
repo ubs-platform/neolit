@@ -1,4 +1,5 @@
 import { NeolitComponent, State } from "@ubs-platform/neolit/core";
+import { Zikirmatik } from "./zikirmatik";
 
 export class SecondaryComponent extends NeolitComponent {
     render(): HTMLElement {
@@ -28,6 +29,7 @@ export class HelloWorld extends NeolitComponent {
             <h1 >Hello, {this.name.get()}!</h1>
             <button onclick={() => this.changeNamePrompt()}>Change name</button>
             <SecondaryComponent />
+            <Zikirmatik />
         </div>;
     }
 }
