@@ -3,6 +3,10 @@ import { Zikirmatik } from "./zikirmatik";
 import { KyleBroflovski } from "./kyle";
 
 export class SecondaryComponent extends NeolitComponent {
+    constructor() {
+        super();
+    }
+    
     render(): HTMLElement {
         return <h2>Secondary Component</h2>;
     }

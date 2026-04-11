@@ -1,28 +1,45 @@
 import { NeolitNode } from "./neolit-node";
 import { State } from "./state";
 
-export class NeolitStateHolder {
-    // stateKey ve state değerlerini tutan bir Map. parent tekrar renderlandığında state'ler'in korunması için saklanacak.
-    static stateMap = new Map<string, State<any>[]>();
-}
-
 export abstract class NeolitComponent {
+    static isNeolitComponent = true;
+    static componentInstances = new Map<string, NeolitComponent>();
     private _mountTarget: HTMLElement | null = null;
     private _currentElement: NeolitNode | null = null;
     private watchedStateNames : string[] = [];
-    constructor() {
+    private key: string;
+
+    constructor(properties?: Record<string, any>, key?: string) {
+        this.key = key ?? Math.random().toString(36).substring(2, 9);
+        NeolitComponent.componentInstances.set(this.key, this);
         console.log("NeolitComponent created");
     }
 
     abstract render(): NeolitNode;
 
-    watch<T>(name: string, state: State<T>): void {
+    watch<T>(state: State<T>): void {
         state.subscribe(() => this._rerender());
-        this.watchedStateNames.push(name);
+    }
+
+    temporaryDestroy(): void {
+        if (this._mountTarget) {
+            this._mountTarget.removeChild(this._currentElement!);
+        }
+    }
+
+    destroy(): void {
+        if (this._mountTarget) {
+            this._mountTarget.removeAttribute("data-neolit-mounted");
+            this._mountTarget.removeAttribute("data-neolit-key");
+        }
+        NeolitComponent.componentInstances.delete(this.key);
     }
 
     mount(target: HTMLElement, initialElement?: NeolitNode): NeolitNode {
         this._mountTarget = target;
+        target.attributes.setNamedItem(document.createAttribute("data-neolit-mounted"));
+        target.setAttribute("data-neolit-key", this.key);
+
         this._currentElement = initialElement ?? this.render();
 
         if (!target.contains(this._currentElement)) {
@@ -39,13 +56,6 @@ export abstract class NeolitComponent {
         this._currentElement = newElement;
     }
 
-    pushStateIntoHolder() {
-        
-
-        for (let index = 0; index < this.watchedStateNames.length; index++) {
-            const name = this.watchedStateNames[index];
-            
-        }
-    }
+    
 }
 
