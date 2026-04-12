@@ -13,6 +13,9 @@ export interface ForProperties<T> {
     keyFn?: (item: T, index: number) => string | number;
     compareItems?: (nextItem: T, previousItem: T, index: number) => boolean;
     strictKeys?: boolean;
+
+    // This is for container elements that need to pass className down to their children, e.g. <ul> for list items in For.
+    className?: Record<string, string>;
 }
 
 /**
@@ -34,6 +37,9 @@ export class For<T> extends NeolitComponent {
     compareItems?: (nextItem: T, previousItem: T, index: number) => boolean;
     strictKeys: boolean;
     itemIndexCache: Map<string | number, NeolitNode> = new Map();
+    private anchor: Comment = document.createComment("neolit-for-anchor");
+    private renderedNodes: NeolitNode[] = [];
+    private mountedStatefulItems: Stateful<any>[] = [];
     private didWarnIndexFallback = false;
 
     constructor({ items, children, keyFn, compareItems, strictKeys = false }: ForProperties<T>) {
@@ -175,8 +181,63 @@ export class For<T> extends NeolitComponent {
         }
 
         this.invalidateChangedCacheEntries(newItems);
-        this.rerender();
+        this.syncRenderedNodes();
         this.previousItems = [...newItems];
+    }
+
+    private disposeStatefulItems(): void {
+        this.mountedStatefulItems.forEach((instance) => instance.destroy());
+        this.mountedStatefulItems = [];
+    }
+
+    private clearRenderedNodes(): void {
+        this.renderedNodes.forEach((node) => {
+            if (node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        });
+        this.renderedNodes = [];
+    }
+
+    private getRenderableNodes(): { nodes: Array<{ node: NeolitNode; stateful?: Stateful<any> }>; statefulItems: Stateful<any>[] } {
+        const nodes: Array<{ node: NeolitNode; stateful?: Stateful<any> }> = [];
+        const statefulItems: Stateful<any>[] = [];
+
+        this.items.get().forEach((item, index) => {
+            if (isState(item)) {
+                const statefulItem = new Stateful({
+                    state: item,
+                    children: () => this.cacheAndResultSelf(getStateValue<T>(item), index),
+                });
+                statefulItems.push(statefulItem);
+                nodes.push({ node: statefulItem.render(), stateful: statefulItem });
+                return;
+            }
+
+            nodes.push({ node: this.cacheAndResultSelf(getStateValue<T>(item), index) });
+        });
+
+        return { nodes, statefulItems };
+    }
+
+    private syncRenderedNodes(): void {
+        const parent = this.anchor.parentElement;
+        if (!parent) return;
+
+        this.disposeStatefulItems();
+        this.clearRenderedNodes();
+
+        const { nodes, statefulItems } = this.getRenderableNodes();
+
+        nodes.forEach((entry) => {
+            parent.insertBefore(entry.node, this.anchor);
+            if (entry.stateful) {
+                entry.stateful.mount(parent, entry.node);
+            }
+        });
+
+        this.mountedStatefulItems = statefulItems;
+        this.renderedNodes = nodes.map((entry) => entry.node);
     }
 
     cacheAndResultSelf(item: T, index: number): NeolitNode {
@@ -190,15 +251,25 @@ export class For<T> extends NeolitComponent {
     }
 
 
+    mount(target: HTMLElement, initialElement?: NeolitNode): NeolitNode {
+        const mounted = super.mount(target, initialElement ?? this.anchor);
+        this.syncRenderedNodes();
+        return mounted;
+    }
+
+    temporaryDestroy(): void {
+        this.disposeStatefulItems();
+        this.clearRenderedNodes();
+        super.temporaryDestroy();
+    }
+
+    destroy(): void {
+        this.disposeStatefulItems();
+        this.clearRenderedNodes();
+        super.destroy();
+    }
+
     render(): NeolitNode {
-        return <>
-            {this.items.get().map((item, index) =>
-                isState(item) ?
-                    <Stateful state={item}>
-                        {() => this.cacheAndResultSelf(getStateValue<T>(item), index)}
-                    </Stateful> :
-                    this.cacheAndResultSelf(getStateValue<T>(item), index)
-            )}
-        </>
+        return this.anchor;
     }
 }

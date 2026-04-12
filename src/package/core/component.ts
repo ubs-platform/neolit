@@ -8,10 +8,12 @@ export abstract class NeolitComponent {
     private _currentElement: NeolitNode | null = null;
     private _unsubscribers: Array<() => void> = [];
     private key: string;
+    private mountToParent = false;
 
     constructor(_properties?: Record<string, any>, key?: string) {
         this.key = key ?? Math.random().toString(36).substring(2, 9);
         NeolitComponent.componentInstances.set(this.key, this);
+        this.mountToParent = !!_properties?.mountToParent;
         console.log("NeolitComponent created");
     }
 
@@ -41,6 +43,9 @@ export abstract class NeolitComponent {
     }
 
     mount(target: HTMLElement, initialElement?: NeolitNode): NeolitNode {
+        if (this.mountToParent) {
+            target = target.parentElement as HTMLElement;
+        }
         this._mountTarget = target;
         target.attributes.setNamedItem(document.createAttribute("data-neolit-mounted"));
         target.setAttribute("data-neolit-key", this.key);

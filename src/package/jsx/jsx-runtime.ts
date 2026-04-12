@@ -12,6 +12,81 @@ export interface ComponentRenderResult {
 
 type JsxChild = NeolitChild | ComponentRenderResult;
 
+class NeolitFragment extends NeolitComponent {
+    private anchor: Comment = document.createComment("neolit-fragment-anchor");
+    private mountedNodes: Node[] = [];
+    private mountedComponents: NeolitComponent[] = [];
+    private fragmentChildren: JsxChild[] = [];
+
+    constructor(props?: Props & { children?: JsxChild[] | JsxChild }) {
+        super();
+        const { children } = props ?? {};
+        this.fragmentChildren = Array.isArray(children)
+            ? children
+            : children === undefined
+                ? []
+                : [children];
+    }
+
+    private clearMountedChildren(): void {
+        this.mountedComponents.forEach((component) => component.destroy());
+        this.mountedComponents = [];
+
+        this.mountedNodes.forEach((node) => {
+            if (node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        });
+        this.mountedNodes = [];
+    }
+
+    private insertChildBeforeAnchor(parent: HTMLElement, child: JsxChild): void {
+        if (isComponentRenderResult(child)) {
+            parent.insertBefore(child.element, this.anchor);
+            child.componentInstance.mount(parent, child.element);
+            this.mountedComponents.push(child.componentInstance);
+            this.mountedNodes.push(child.element);
+            return;
+        }
+
+        if (Array.isArray(child)) {
+            child.forEach((nestedChild) => this.insertChildBeforeAnchor(parent, nestedChild));
+            return;
+        }
+
+        const node = normalizeChild(child);
+        parent.insertBefore(node, this.anchor);
+        this.mountedNodes.push(node);
+    }
+
+    private mountChildrenIntoParent(): void {
+        const parent = this.anchor.parentElement;
+        if (!parent) return;
+
+        this.fragmentChildren.forEach((child) => this.insertChildBeforeAnchor(parent, child));
+    }
+
+    render(): NeolitNode {
+        return this.anchor;
+    }
+
+    mount(target: HTMLElement, initialElement?: NeolitNode): NeolitNode {
+        const mounted = super.mount(target, initialElement ?? this.anchor);
+        this.mountChildrenIntoParent();
+        return mounted;
+    }
+
+    temporaryDestroy(): void {
+        this.clearMountedChildren();
+        super.temporaryDestroy();
+    }
+
+    destroy(): void {
+        this.clearMountedChildren();
+        super.destroy();
+    }
+}
+
 function manupileElementByStateOrNot(element: HTMLElement, stateOrPlain: StateOrPlain<any>, callback: (value: any) => void) {
     if (isState(stateOrPlain)) {
         const cb = () => callback(getStateValue(stateOrPlain));
@@ -115,7 +190,7 @@ export function jsx(tag: Tag, props: Props & { children?: JsxChild[] | JsxChild 
 
 export const jsxs = jsx;
 
-export const Fragment = "neolit-fragment" as unknown as Tag;
+export const Fragment: ComponentConstructor = NeolitFragment;
 
 declare global {
     namespace JSX {
