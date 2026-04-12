@@ -15,7 +15,11 @@ type JsxChild = NeolitChild | ComponentRenderResult;
 function normalizeChild(child: NeolitChild): Node {
     if (child === null || child === undefined) return document.createTextNode("");
     if (child instanceof State) {
-        return document.createTextNode(child.toString());
+        const textNode = document.createTextNode(child.toString());
+        child.subscribe(() => {
+            textNode.textContent = child.toString();
+        });
+        return textNode;
     }
     if (typeof child === "string" || typeof child === "number") {
         return document.createTextNode(String(child));
@@ -60,6 +64,9 @@ export function jsx(tag: Tag, props: Props & { children?: JsxChild[] | JsxChild 
             el.addEventListener(eventName, value as EventListener);
         } else {
             el.setAttribute(key, String(value));
+            if (value instanceof State) {
+                value.subscribe(() => el.setAttribute(key, String(value)));
+            }
         }
     }
 

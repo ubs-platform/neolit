@@ -6,7 +6,6 @@ export abstract class NeolitComponent {
     static componentInstances = new Map<string, NeolitComponent>();
     private _mountTarget: HTMLElement | null = null;
     private _currentElement: NeolitNode | null = null;
-    private watchedStateNames : string[] = [];
     private key: string;
 
     constructor(properties?: Record<string, any>, key?: string) {
@@ -18,7 +17,8 @@ export abstract class NeolitComponent {
     abstract render(): NeolitNode;
 
     watch<T>(state: State<T>): void {
-        state.subscribe(() => this._rerender());
+        // state güncellendiğinde text node güncellenir. bu yüzden koskoca componentin yeniden render edilmesine gerek yoktur.
+        // state.subscribe(() => this._rerender());
     }
 
     temporaryDestroy(): void {
