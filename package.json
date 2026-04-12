@@ -1,17 +1,45 @@
 {
-  "name": "testo-ui",
+  "name": "@ubs-platform/neolit",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A lightweight declarative UI framework with fine-grained state updates.",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc --project tsconfig.lib.json",
+    "prepublishOnly": "npm run build:lib"
   },
+  "exports": {
+    "./core": {
+      "import": "./dist/lib/core.js",
+      "require": "./dist/lib/core.cjs",
+      "types": "./dist/lib/types/core/index.d.ts"
+    },
+    "./jsx-runtime": {
+      "import": "./dist/lib/jsx-runtime.js",
+      "require": "./dist/lib/jsx-runtime.cjs",
+      "types": "./dist/lib/types/jsx/jsx-runtime.d.ts"
+    },
+    "./jsx-dev-runtime": {
+      "import": "./dist/lib/jsx-dev-runtime.js",
+      "require": "./dist/lib/jsx-dev-runtime.cjs",
+      "types": "./dist/lib/types/jsx/jsx-dev-runtime.d.ts"
+    },
+    "./structural": {
+      "import": "./dist/lib/structural.js",
+      "require": "./dist/lib/structural.cjs",
+      "types": "./dist/lib/types/structural/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/lib"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "vite": "^8.0.8"
+    "vite": "^8.0.8",
+    "typescript": "^5.0.0"
   }
 }
