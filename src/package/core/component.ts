@@ -40,16 +40,16 @@ export abstract class NeolitComponent {
         target.setAttribute("data-neolit-key", this.key);
 
         const currentEls = initialElement ?? this.render();
-        
+        this._currentElement = currentEls;
+
         if (!Array.isArray(this._currentElement)) {
-            this._currentElement = currentEls;
+
             if (!target.contains(this._currentElement as Node)) {
                 target.appendChild(this._currentElement as Node);
             }
             return this._currentElement;
         }
 
-        this._currentElement = currentEls;
         (this._currentElement as NeolitNode[]).forEach(el => {
             if (!target.contains(el)) {
                 target.appendChild(el);

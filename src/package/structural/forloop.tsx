@@ -179,6 +179,7 @@ export class For<T> extends NeolitComponent {
         this.previousItems = [...newItems];
     }
 
+
     cacheAndResultSelf(item: T, index: number): NeolitNode {
         const key = this.getItemKey(item, index);
         if (this.itemIndexCache.has(key)) {
