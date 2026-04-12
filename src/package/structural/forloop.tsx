@@ -179,6 +179,7 @@ export class For<T> extends NeolitComponent {
         this.previousItems = [...newItems];
     }
 
+
     cacheAndResultSelf(item: T, index: number): NeolitNode {
         const key = this.getItemKey(item, index);
         if (this.itemIndexCache.has(key)) {
@@ -190,15 +191,13 @@ export class For<T> extends NeolitComponent {
     }
 
 
-    render(): NeolitNode {
-        return <>
-            {this.items.get().map((item, index) =>
-                isState(item) ?
-                    <Stateful state={item}>
-                        {() => this.cacheAndResultSelf(getStateValue<T>(item), index)}
-                    </Stateful> :
-                    this.cacheAndResultSelf(getStateValue<T>(item), index)
-            )}
-        </>
+    render(): NeolitNode[] {
+        return this.items.get().map((item, index) =>
+            isState(item) ?
+                <Stateful state={item}>
+                    {() => this.cacheAndResultSelf(getStateValue<T>(item), index)}
+                </Stateful> :
+                this.cacheAndResultSelf(getStateValue<T>(item), index)
+        );
     }
 }
