@@ -1,4 +1,4 @@
-import { NeolitComponent, NeolitNode, state } from "./package/core";
+import { NeolitComponent, NeolitNode, state } from "../package/core";
 
 export class KyleBroflovski extends NeolitComponent {
     imageSrc = state("");

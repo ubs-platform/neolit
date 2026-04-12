@@ -1,8 +1,8 @@
 import { NeolitComponent, State } from "@ubs-platform/neolit/core";
 import { Zikirmatik } from "./zikirmatik";
 import { KyleBroflovski } from "./kyle";
-import { Stateful } from "./package/structural/stateful";
-import { For } from "./package/structural/forloop";
+import { Stateful } from "../package/structural/stateful";
+import { For } from "../package/structural/forloop";
 
 export class SecondaryComponent extends NeolitComponent {
     constructor() {

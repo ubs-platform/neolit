@@ -1,5 +1,5 @@
-import { HelloWorld } from "./hello-world";
 import { jsx } from "@ubs-platform/neolit/jsx-runtime";
+import { Introduction } from "./landing/introduction";
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,6 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Root element not found");
         return;
     }
-    const element = jsx(HelloWorld, { });
-    element.componentInstance.mount(root, element.element);
+    const component = new Introduction();
+    component.mount(root);
 });
