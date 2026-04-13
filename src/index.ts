@@ -1,25 +1,27 @@
 import { Introduction } from "./landing/introduction";
 
-import { Injectable, Inject, inject } from "@ubs-platform/neolit/injectables";
+import { Injectable, inject } from "@ubs-platform/neolit/injectables";
 
 const API_URL = Symbol("API_URL");
 
 @Injectable({ providedIn: "root" })
 class Logger {
-  constructor(
-  ) {}
+    constructor(
+    ) {
+    }
 
-  public info(message: string): void {
-    console.info(`[Logger]: ${message}`);
-  }
+    public info(message: string): void {
+        console.info(`[Logger]: ${message}`);
+    }
 }
 
 
-@Injectable({ providedIn: "root" })
+@Injectable({ providedIn: "root", deps: [Logger] })
 class ApiService {
     constructor(
         private logger: Logger,
-    ) {}
+    ) {
+    }
 
     public fetchData(): void {
         debugger

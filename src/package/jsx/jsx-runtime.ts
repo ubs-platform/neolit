@@ -61,7 +61,7 @@ function isComponentRenderResult(value: JsxChild): value is ComponentRenderResul
 }
 
 function appendJsxChild(parent: HTMLElement, child: JsxChild): void {
-    if (isComponentRenderResult(child)) {
+    if (isComponentRenderResult(child) && child.element instanceof Node) {
         child.componentInstance.mount(parent, child.element);
         return;
     }
@@ -69,7 +69,7 @@ function appendJsxChild(parent: HTMLElement, child: JsxChild): void {
         child.forEach(c => appendJsxChild(parent, c));
         return;
     }
-    parent.appendChild(normalizeChild(child));
+    parent.appendChild(normalizeChild(child as NeolitChild));
 }
 
 export function jsx(tag: ComponentConstructor, props: Props & { children?: JsxChild[] | JsxChild }): ComponentRenderResult;
