@@ -26,6 +26,7 @@
     "paths": {
       "@ubs-platform/neolit/core": ["./src/package/core"],
       "@ubs-platform/neolit/injectables": ["./src/package/injectables"],
+      "@ubs-platform/neolit/structural": ["./src/package/structural"],
       "@ubs-platform/neolit/jsx-runtime": ["./src/package/jsx/jsx-runtime.ts"],
       "@ubs-platform/neolit/jsx-dev-runtime": ["./src/package/jsx/jsx-dev-runtime.ts"]
     }
