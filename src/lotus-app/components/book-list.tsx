@@ -8,7 +8,7 @@ import {
 import { For } from "../../package/structural/forloop";
 import { inject } from "@ubs-platform/neolit/injectables";
 import { BookService } from "../services/book.service";
-import { If, Stateful } from "@ubs-platform/neolit/structural";
+import { fromState } from "@ubs-platform/neolit/structural";
 
 export class BookList extends NeolitComponent {
   bookService = inject(BookService);
@@ -39,33 +39,31 @@ export class BookList extends NeolitComponent {
         </button>
         <button onclick={() => this.setList("ALL")}>Tüm kitaplar</button>
 
-        <If condition={this.bookList.busy}>
-          {() => (
-            <div className="h-full w-full opacity-50 bg-gray-500 flex items-center justify-center"
-            style={{ position: "fixed", top: 0, left: 0 }}>
-              <h1 style={{ color: "white", fontSize: "2rem" }}>Yükleniyor...</h1>
-            </div>
-          )}
-        </If>
-        
+        {fromState(this.bookList).renderIf(() => (
+          <div
+            className="h-full w-full opacity-50 bg-gray-500 flex items-center justify-center"
+            style={{ position: "fixed", top: 0, left: 0 }}
+          >
+            <h1 style={{ color: "white", fontSize: "2rem" }}>Yükleniyor...</h1>
+          </div>
+        ))}
+
         <div className="flex flex-wrap gap-2">
-          <For items={this.bookListMapped} keyFn={(item) => item._id} let-item>
-            {(item) => (
-              <div className="card">
-                <img
-                  height="100px"
-                  width="100px"
-                  class="rounded"
-                  src={`http://localhost:3000/api/file/BOOK_THUMB/${item._id}`}
-                  alt={item.metaInfo.name}
-                ></img>
-                <div>{item.metaInfo.name}</div>
-              </div>
-            )}
-          </For>
+          {fromState(this.bookListMapped).keyFn(a => a._id).renderFor((item) => (
+            <div className="card" key={item._id}>
+              <img
+                height="100px"
+                width="100px"
+                class="rounded"
+                src={`http://localhost:3000/api/file/BOOK_THUMB/${item._id}`}
+                alt={item.metaInfo.name}
+              ></img>
+              <div>{item.metaInfo.name}</div>
+            </div>
+          ))}
         </div>
       </>
-    );   
+    );
   }
 }
 

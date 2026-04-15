@@ -1,0 +1,44 @@
+import { NeolitNode, State, StateOrPlain } from "../core";
+import { For } from "./forloop";
+import { If } from "./ifblock";
+import { Stateful } from "./stateful";
+
+export class FromState {
+    /**
+     *
+     */
+    private _keyFn?: (item: any) => string | number;
+
+    constructor(private state: State<any>) {
+    }
+
+    keyFn(keyFn: (item: any) => string | number) {
+        this._keyFn = keyFn;
+        return this;
+    }
+
+
+    renderFor<T = any>(renderItem: (item: T, index: number) => NeolitNode): For<T> {
+        return new For({
+            items: this.state,
+            keyFn: this._keyFn,
+            children: (item, index) => renderItem(item, index),
+        });
+    }
+
+    renderIf(renderItem: () => NeolitNode): If {
+        return new If({
+            condition: this.state,
+            children: () => renderItem(),
+        });
+    }
+
+    stateful<T = any>(renderItem: () => NeolitNode): Stateful<T> {
+        return new Stateful({
+            state: this.state,
+            children: () => renderItem(),
+        });
+    }
+}
+
+export const fromState = (state: State<any>) => new FromState(state);

@@ -3,7 +3,7 @@ export class State<DATA> {
 
     private data: DATA;
 
-    changeListeners: Array<(newData: DATA) => void> = [];
+    changeListeners: Array<(newData: DATA, oldData?: DATA) => void> = [];
 
     constructor(initialData: DATA) {
         this.data = initialData;
@@ -14,11 +14,12 @@ export class State<DATA> {
     }
 
     set(newData: DATA): void {
+        const oldValue = this.data;
         const triggerFlag = this.determineTriggerIsRequired(newData);
         this.data = newData;
 
         if (triggerFlag) {
-            this.changeListeners.forEach(listener => listener(newData));
+            this.changeListeners.forEach(listener => listener(newData, oldValue));
         }
     }
 
@@ -32,15 +33,15 @@ export class State<DATA> {
         this.data = newData;
 
         if (triggerFlag) {
-            this.changeListeners.forEach(listener => listener(newData));
+            this.changeListeners.forEach(listener => listener(newData, this.data));
         }
     }
 
-    subscribe(listener: (newData: DATA) => void): void {
+    subscribe(listener: (newData: DATA, oldData?: DATA) => void): void {
         this.changeListeners.push(listener);
     }
 
-    unsubscribe(listener: (newData: DATA) => void): void {
+    unsubscribe(listener: (newData: DATA, oldData?: DATA) => void): void {
         const index = this.changeListeners.indexOf(listener);
         if (index !== -1) {
             this.changeListeners.splice(index, 1);
@@ -53,7 +54,6 @@ export class State<DATA> {
 
 
 }
-
 
 export class ComputedState<DATA> extends State<DATA> {
 
@@ -70,13 +70,38 @@ export class ComputedState<DATA> extends State<DATA> {
     }
 
     recompute(): void {
+        const oldValue = this.get();
         const newData = this.computeFn();
         const triggerFlag = this.determineTriggerIsRequired(newData);
         (this as any).data = newData;
 
         if (triggerFlag) {
-            this.changeListeners.forEach(listener => listener(newData));
+            this.changeListeners.forEach(listener => listener(newData, oldValue));
         }
+    }
+
+}
+
+export class CombinedStateUpdateInfo {
+    constructor(public updatedState: StateOrPlain<any>, public newValue: any, public oldValue: any = null) {
+    }
+}
+
+export class CombinedState extends State<any> {
+
+
+
+    constructor(statesListened: StateOrPlain<any>[]) {
+        super(null);
+        for (const stateOrPlain of statesListened) {
+            if (stateOrPlain instanceof State) {
+                stateOrPlain.subscribe(() => this.recompute(new CombinedStateUpdateInfo(stateOrPlain, stateOrPlain.get(), stateOrPlain.get())));
+            }
+        }
+    }
+
+    recompute(updateInfo: CombinedStateUpdateInfo): void {
+        this.set(updateInfo);
     }
 
 }
@@ -163,6 +188,7 @@ export class AsyncState<T> extends State<T> {
             console.error("Error in AsyncState:", error);
             this.errorObject.set(error);
             this.busy.set(false);
+            this.set(null as any); // Optionally reset the data to null or keep the old data depending on the use case
         });
     }
 }
