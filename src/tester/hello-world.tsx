@@ -1,8 +1,6 @@
 import { NeolitComponent, State } from "@ubs-platform/neolit/core";
 import { Zikirmatik } from "./zikirmatik";
 import { KyleBroflovski } from "./kyle";
-import { Stateful } from "../package/structural/stateful";
-import { For } from "../package/structural/forloop";
 import { fromState } from "@ubs-platform/neolit/structural";
 
 export class SecondaryComponent extends NeolitComponent {
@@ -79,7 +77,7 @@ export class DynamicListDemo extends NeolitComponent {
         <button onclick={() => this.removeFirst()}>Ilki Sil</button>
         <button onclick={() => this.reverseItems()}>Ters Cevir</button>
         <ul>
-          <For items={this.items}>{(item) => <li>{item}</li>}</For>
+          {fromState(this.items).renderFor((item) => <li>{item}</li>)}
         </ul>
       </section>
     );
