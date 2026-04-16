@@ -44,6 +44,12 @@ function normalizeChild(child: NeolitChild): Node {
     if (typeof child === "string" || typeof child === "number") {
         return document.createTextNode(String(child));
     }
+    if (typeof child === "number") {
+        return document.createTextNode(String(child));
+    }
+    if (typeof child === "boolean") {
+        return document.createTextNode("");
+    }
     return child as Node;
 }
 
@@ -108,7 +114,14 @@ function applyProps(el: HTMLElement, attrs: Record<string, unknown>): void {
             }
         } else if (key === "className" || key === "klass") {
             applyClassName(el, value);
-        } else {
+        } else if (el.tagName === "INPUT" && (key === "value" || key === "checked")) {
+            // INPUT elementlerinde value ve checked özellikleri attribute değil property olarak setlenir.
+            bindToStateOrPlain(el, value as StateOrPlain<any>, (v) => {
+                (el as HTMLInputElement)[key as "value" | "checked"] = v as never;
+            });
+        }
+        
+        else {
             setAttributeWithStateSupport(el, key, value);
         }
     }

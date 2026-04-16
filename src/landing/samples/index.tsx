@@ -4,6 +4,8 @@ import { TodoList } from "./todo-list";
 import { IncreaseCounter } from "./increase-counter";
 import { inject } from "@ubs-platform/neolit/injectables";
 import { appContextInjector } from "../../app-context";
+import { TodoListWithoutCustomComponent } from "./todo-list-without-custom-component";
+import { AsyncFetch } from "./async-fetch";
 
 export class SampleListPage extends NeolitComponent {
   samples = [
@@ -11,26 +13,40 @@ export class SampleListPage extends NeolitComponent {
       name: "Merhaba Dünya",
       description:
         "Basit merhaba dünya örneği. Bir butona tıklayarak kullanıcıdan adını girmesini istiyor ve ardından merhaba mesajını güncelliyor.",
-      repoPath: "src/landing/samples/hello-world.tsx",
+      repoPath: "/blob/main/src/landing/samples/hello-world.tsx",
       componentClass: HelloWorld,
     },
     {
       name: "Yapılacaklar Listesi",
       description:
         "Basit bir yapılacaklar listesi örneği. Kullanıcıdan yapılacaklar listesini girmesini istiyor ve ardından listeyi güncelliyor.",
-      repoPath: "src/landing/samples/todo-list.tsx",
+      repoPath: "/blob/main/src/landing/samples/todo-list.tsx",
       componentClass: TodoList,
+    },
+    {
+      name: "Normal input kullanarak Yapılacaklar Listesi",
+      description:
+        "Basit bir yapılacaklar listesi örneği. Kullanıcıdan yapılacaklar listesini girmesini istiyor ve ardından listeyi güncelliyor. Bu örnek normal todo-list örneğinden farklı olarak, özel bir TodoItem bileşeni kullanmadan sadece temel HTML öğeleriyle yapılmıştır.",
+      repoPath: "/blob/main/src/landing/samples/todo-list-without-custom-component.tsx",
+      componentClass: TodoListWithoutCustomComponent,
     },
     {
       name: "Sayaç",
       description:
         "Basit bir sayaç örneği. Bir butona tıklayarak sayacı arttırıyor.",
-      repoPath: "src/landing/samples/increase-counter.tsx",
+      repoPath: "/blob/main/src/landing/samples/increase-counter.tsx",
       componentClass: IncreaseCounter,
+    },
+    {
+      name: "Async İşlem",
+      description:
+        "Asenkron işlem örneği. Bir butona tıklayarak 5 saniye bekleyen bir promise başlatılıyor ve sonuç ekrana yazdırılıyor.",
+      repoPath: "/blob/main/src/landing/samples/async-fetch.tsx",
+      componentClass: AsyncFetch,
     },
   ];
 
-  readonly git = inject("github-repo", appContextInjector)
+  readonly git = inject("github-repo", appContextInjector);
 
   constructor() {
     super();
@@ -48,9 +64,7 @@ export class SampleListPage extends NeolitComponent {
               {sample.componentClass && <sample.componentClass />}
               <button
                 className="mt-2 px-3 py-1 rounded bg-blue-500 text-white"
-                onclick={() =>
-                  window.open(this.git + sample.repoPath)
-                }
+                onclick={() => window.open(this.git + sample.repoPath)}
               >
                 Koda Git
               </button>

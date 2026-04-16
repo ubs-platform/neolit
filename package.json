@@ -39,6 +39,11 @@
       "import": "./dist/lib/structural.js",
       "require": "./dist/lib/structural.cjs",
       "types": "./dist/lib/types/structural/index.d.ts"
+    },
+    "./routing": {
+      "import": "./dist/lib/routing.js",
+      "require": "./dist/lib/routing.cjs",
+      "types": "./dist/lib/types/routing/index.d.ts"
     }
   },
   "files": [

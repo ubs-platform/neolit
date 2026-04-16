@@ -1,4 +1,4 @@
-import { NeolitNode, State, StateOrPlain } from "../core";
+import { AsyncState, computed, NeolitNode, State, StateOrPlain } from "../core";
 import { For } from "./forloop";
 import { If } from "./ifblock";
 import { Stateful } from "./stateful";
@@ -8,9 +8,12 @@ export class FromState {
      *
      */
     private _keyFn?: (item: any) => string | number;
-    private _elseChildren?: () => NeolitNode;
+    private _elseChildren?: () => NeolitNode = () => document.createTextNode("");
+    state: State<any>;
 
-    constructor(private state: State<any>) {
+    constructor(_state: State<any>) {
+
+        this.state = _state;
     }
 
     keyFn(keyFn: (item: any) => string | number) {
@@ -46,12 +49,12 @@ export class FromState {
         return fn;
     }
 
-    stateful<T = any>(renderItem: () => NeolitNode): () => Stateful<T> {
+    stateful<T = any>(renderItem: (data: T) => NeolitNode): () => Stateful<T> {
         return () => new Stateful({
             state: this.state,
-            children: () => renderItem(),
+            children: (data: T) => renderItem(data),
         });
     }
 }
 
-export const fromState = (state: State<any>) => new FromState(state);
+export const fromState = <T>(state: State<T>) => new FromState(state);

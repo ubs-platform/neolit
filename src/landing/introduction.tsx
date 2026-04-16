@@ -1,8 +1,8 @@
 import { NeolitComponent, State, state } from "@ubs-platform/neolit/core";
 import { For, fromState, Stateful } from "@ubs-platform/neolit/structural";
-import { HelloWorld } from "../tester/hello-world";
-import { Zikirmatik } from "../tester/zikirmatik";
-import { KyleBroflovski } from "../tester/kyle";
+import { inject } from "../package/injectables/root-container";
+import { Router } from "../package/routing";
+import { appContextInjector } from "../app-context";
 
 export interface SampleComponentItem {
   name: string;
@@ -40,28 +40,9 @@ export class Introduction extends NeolitComponent {
     },
   ]);
 
-  sampleComponents = state<SampleComponentItem[]>([
-    {
-      name: "HelloWorld",
-      source: "test/hello-world.tsx",
-      note: "Temel component kompozisyonu, event ve alt bileşen kullanımı.",
-      componentConstructor: () => HelloWorld,
-    },
-    {
-      name: "Zikirmatik",
-      source: "test/zikirmatik.tsx",
-      note: "state + update ile sayaç mantığı.",
-      componentConstructor: () => Zikirmatik,
-    },
-    {
-      name: "KyleBroflovski",
-      source: "test/kyle.tsx",
-      note: "State ile görsel/alt metin güncelleme ve liste üzerinden buton üretimi. Bu arada Kyle'ı çok seviyorum. Kyle candır 💚",
-      componentConstructor: () => KyleBroflovski,
-    },
-  ]);
-
   activeSampleComponent = state<SampleComponentItem | null>(null);
+  router = inject(Router, appContextInjector);
+  githubRepoLink = inject<string>("github-repo", appContextInjector);
 
   constructor() {
     super();
@@ -224,7 +205,47 @@ export class Introduction extends NeolitComponent {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-orange-200 bg-orange-50/60 p-6 sm:p-8">
+          <section>
+            <h2 className="text-2xl font-black text-slate-900">
+              Neolit'i daha fazla keşfet
+            </h2>
+
+            <div className="grid">
+              <div className="col-6">
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Neolit API'lerini kullanarak oluşturulmuş örnek bileşenler
+                  var. Bunlar gerçek kullanım örnekleri sunuyor. Neolit'in
+                  API'lerinin nasıl çalıştığını görmenin harika bir yolu.
+                </p>
+              </div>
+              <div className="col-6">
+                <button
+                  className="mt-4 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white"
+                  onclick={() => this.router.navigate("/samples")}
+                >
+                  Örnekler sayfası
+                </button>
+              </div>
+              <div className="col-6">
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Neolit açık kaynaklıdır ve herkesin kullanımına açıktır.
+                  GitHub reposunda kaynak kodunu inceleyebilir, katkıda
+                  bulunabilir veya kendi projelerinde kullanmaya
+                  başlayabilirsin.
+                </p>
+              </div>
+              <div className="col-6">
+                <button
+                  className="mt-4 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white"
+                  onclick={() => window.open(this.githubRepoLink, "_blank")}
+                >
+                  Github reposu
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* <section className="rounded-3xl border border-orange-200 bg-orange-50/60 p-6 sm:p-8">
             <h2 className="text-2xl font-black text-slate-900">
               Test Klasorunden Ornekler
             </h2>
@@ -265,18 +286,9 @@ export class Introduction extends NeolitComponent {
                 })()}
               </div>
             ))}
-          </section>
+          </section> */}
         </main>
-        <footer className="mx-auto mt-16 w-full max-w-6xl rounded-3xl border border-slate-200 bg-blue-300 p-8 text-center text-sm text-slate-500 shadow-sm">
-          {/* <div className="flex flex-row align-items-center justify-content-center gap-2 mt-16">
-                    <img src="/assets/tk.svg" alt="TK Logo" height="24px" /> <div>
-                        Gelişimlerinden
-                    </div>
-                </div> */}
-          <p className="mt-10 text-center text-sm text-slate-500">
-            © 2026 Tetakent (H.C.G). Tüm hakları saklıdır.
-          </p>
-        </footer>
+
       </div>
     );
   }

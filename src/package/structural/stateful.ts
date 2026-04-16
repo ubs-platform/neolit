@@ -7,9 +7,9 @@ import { NeolitComponent, NeolitNode, State } from "../core";
  */
 export class Stateful<T> extends NeolitComponent {
     state: State<T>;
-    children: () => NeolitNode | NeolitNode[];
+    children: (data:T) => NeolitNode | NeolitNode[];
 
-    constructor({ children, state: state }: { children: () => NeolitNode | NeolitNode[], state: State<T> }) {
+    constructor({ children, state: state }: { children: (data:T) => NeolitNode | NeolitNode[], state: State<T> }) {
         super();
         this.children = children;
         this.state = state;
@@ -19,7 +19,7 @@ export class Stateful<T> extends NeolitComponent {
 
     render(): NeolitNode | NeolitNode[] {
         // TODO: Burada child'i direkt render edecek. her condition state'i güncellendiğinde içerisindeki child render edilecek. bu sayede condition state'i güncellendiğinde sadece child render edilecek, tüm component değil.
-        return this.children?.();
+        return this.children?.(this.state.get());
 
     }
 }
