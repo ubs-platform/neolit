@@ -1,0 +1,63 @@
+import { NeolitNode, NeolitComponent, state } from "@ubs-platform/neolit/core";
+import { HelloWorld } from "./hello-world";
+import { TodoList } from "./todo-list";
+import { IncreaseCounter } from "./increase-counter";
+import { inject } from "@ubs-platform/neolit/injectables";
+import { appContextInjector } from "../../app-context";
+
+export class SampleListPage extends NeolitComponent {
+  samples = [
+    {
+      name: "Merhaba Dünya",
+      description:
+        "Basit merhaba dünya örneği. Bir butona tıklayarak kullanıcıdan adını girmesini istiyor ve ardından merhaba mesajını güncelliyor.",
+      repoPath: "src/landing/samples/hello-world.tsx",
+      componentClass: HelloWorld,
+    },
+    {
+      name: "Yapılacaklar Listesi",
+      description:
+        "Basit bir yapılacaklar listesi örneği. Kullanıcıdan yapılacaklar listesini girmesini istiyor ve ardından listeyi güncelliyor.",
+      repoPath: "src/landing/samples/todo-list.tsx",
+      componentClass: TodoList,
+    },
+    {
+      name: "Sayaç",
+      description:
+        "Basit bir sayaç örneği. Bir butona tıklayarak sayacı arttırıyor.",
+      repoPath: "src/landing/samples/increase-counter.tsx",
+      componentClass: IncreaseCounter,
+    },
+  ];
+
+  readonly git = inject("github-repo", appContextInjector)
+
+  constructor() {
+    super();
+  }
+
+  render(): NeolitNode {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">Neolit Örnekleri</h1>
+        <ul className="space-y-4">
+          {this.samples.map((sample) => (
+            <li key={sample.name} className="border p-4 rounded">
+              <h2 className="text-xl font-semibold">{sample.name}</h2>
+              <p>{sample.description}</p>
+              {sample.componentClass && <sample.componentClass />}
+              <button
+                className="mt-2 px-3 py-1 rounded bg-blue-500 text-white"
+                onclick={() =>
+                  window.open(this.git + sample.repoPath)
+                }
+              >
+                Koda Git
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+}

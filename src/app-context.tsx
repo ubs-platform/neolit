@@ -1,4 +1,5 @@
 import { Introduction } from "./landing/introduction";
+import { SampleListPage } from "./landing/samples";
 import { BookList } from "./lotus-app/components/book-list";
 import { createInjector, rootInjector, provideValue } from "./package/injectables";
 import { RouteMap, Router } from "./package/routing";
@@ -17,7 +18,7 @@ export const routeMap = new RouteMap([
     {
         path: "/samples",
         componentFactory: () => {
-            return <HelloWorld />
+            return <SampleListPage />
         }
     },
     {
@@ -35,3 +36,5 @@ const router = new Router({
 
 provideValue(Router, router, appContextInjector);
 provideValue(RouteMap, routeMap, appContextInjector);
+provideValue("appName", "Neolit", appContextInjector);
+provideValue("github-repo", "https://github.com/huseyincangunduz/sacma-sapan-ui-frameworku", appContextInjector);

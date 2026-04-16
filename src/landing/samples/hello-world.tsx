@@ -1,0 +1,27 @@
+import { NeolitComponent, state, NeolitNode } from "@ubs-platform/neolit/core";
+
+export class HelloWorld extends NeolitComponent {
+
+    sampleDescription = "Basit merhaba dünya örneği. Bir butona tıklayarak kullanıcıdan adını girmesini istiyor ve ardından merhaba mesajını güncelliyor.";
+    repoPath = "src/landing/samples/hello-world.tsx";
+
+    name = state("Dünya");
+
+    constructor() {
+        super();
+    }
+
+    askUsersName() {
+        const userName = prompt("Adınız nedir?");
+        if (userName) {
+            this.name.set(userName);
+        }
+    }
+
+    render(): NeolitNode {
+        return <div>
+            Merhaba, {this.name}!
+            <button onclick={() => this.askUsersName()}>Adı değiştir</button>
+        </div>
+    }
+}
