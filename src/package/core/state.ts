@@ -1,6 +1,6 @@
 export type StateOrPlain<T> = State<T> | T;
 export class State<DATA> {
-
+    private connectedState?: State<any> | null = null;
     private data: DATA;
 
     changeListeners: Array<(newData: DATA, oldData?: DATA) => void> = [];
@@ -17,7 +17,7 @@ export class State<DATA> {
      * Sets the state to a new value. If the new value is different from the current value, it triggers change listeners.
      * @param _newData The new state value or another State instance to derive the value from.
      */
-    set(_newData: DATA | State<DATA>): void {
+    set(_newData: DATA | State<DATA>, stateTwoWay = true): void {
         const oldValue = this.data;
         const newData = _newData instanceof State ? _newData.get() : _newData;
         const triggerFlag = this.determineTriggerIsRequired(newData);
@@ -28,6 +28,7 @@ export class State<DATA> {
         }
 
         if (_newData instanceof State) {
+            this.connectedState = _newData;
             _newData.subscribe((newData) => {
                 const triggerFlag = this.determineTriggerIsRequired(newData);
                 this.data = newData;
@@ -36,6 +37,10 @@ export class State<DATA> {
                     this.changeListeners.forEach(listener => listener(this.data, oldValue));
                 }
             });
+        } else if (this.connectedState) {
+            this.connectedState.set(newData, stateTwoWay);
+        } else {
+            this.connectedState = null;
         }
     }
 
