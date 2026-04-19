@@ -45,6 +45,8 @@ export class AsyncFetch extends NeolitComponent {
   }
 
   render(): NeolitNode {
+
+    
     return (
       <div>
         {/* Durumlar */}
@@ -74,24 +76,12 @@ export class AsyncFetch extends NeolitComponent {
           .else(() => {
             return (
               <div className="flex gap-1">
-                <Button
-                  onclick={() => this.start()}
-                  disabled={this.asyncData.busy}
-                >
-                  {this.asyncData.busy.map((isBusy) =>
-                    isBusy ? "İşlem devam ediyor..." : "İşlemi Başlat",
-                  )}
+                <Button onclick={() => this.start()}>
+                  Başarılı işlem başlat
                 </Button>
 
-                <Button
-                  onclick={() => this.startFail()}
-                  disabled={this.asyncData.busy}
-                >
-                  {this.asyncData.busy.map((isBusy) =>
-                    isBusy
-                      ? "İşlem devam ediyor..."
-                      : "İşlemi Başlat (Hata Veriyor)",
-                  )}
+                <Button onclick={() => this.startFail()}>
+                  Hatalı işlem başlat
                 </Button>
               </div>
             );

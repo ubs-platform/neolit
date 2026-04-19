@@ -1,3 +1,5 @@
+import { DynamicQueue } from "@ubs-platform/dynamic-queue";
+
 export type StateOrPlain<T> = State<T> | T;
 export class State<DATA> {
 
@@ -203,6 +205,7 @@ export function isTheyEqualArrays<T>(a: StateOrPlain<T>[], b: StateOrPlain<T>[])
 }
 
 export class AsyncState<T> extends State<T> {
+    readonly queue = new DynamicQueue();
     activePromise: Promise<T> | null = null;
     busy = state(false);
     initialData: T | undefined;
@@ -211,7 +214,7 @@ export class AsyncState<T> extends State<T> {
      * This allows components to react to errors in asynchronous 
      * operations without needing try-catch blocks around their async calls.
      */
-    errorObject = state<Error | null>(null);
+    error = state<Error | null>(null);
 
     constructor(promise: Promise<T>, initialData?: T) {
         super(initialData as T);
@@ -220,35 +223,42 @@ export class AsyncState<T> extends State<T> {
     }
 
     public setAsync(promise: Promise<T>): void {
-        if (this.activePromise === promise) {
-            return; // Same promise, do nothing
-        }
-        if (this.busy.get()) {
-            console.warn("AsyncState is already processing a promise. Ignoring new promise until the current one resolves.");
-            return; // Already processing a promise, ignore new one
-            // TODO: Queue the new promise or cancel the previous one if possible, depending on the use case
-        }
-        this.errorObject.set(null); // Reset error state when starting a new async operation
-        this.busy.set(true);
-        // this.set(promise);
-        this.activePromise = promise;
-        promise.then(result => {
-            this.errorObject.set(null);
-            this.busy.set(false);
-            this.set(result);
-        }).catch(error => {
-            this.errorObject.set(error);
-            this.busy.set(false);
-            this.set(this.initialData as T); // Optionally reset the data to initialData or keep the old data depending on the use case
-            console.error("Error in AsyncState:", error);
+        this.queue.push(() => {
+            this._setAsync(promise);
         });
     }
 
+    private _setAsync(promise: Promise<T>): Promise<void> {
+        if (this.activePromise === promise) {
+            return Promise.resolve(); // Same promise, do nothing
+        }
+
+        this.error.set(null); // Reset error state when starting a new async operation
+        this.busy.set(true);
+        // this.set(promise);
+        this.activePromise = promise;
+        return new Promise<void>((resolve) => {
+            promise.then(result => {
+                this.error.set(null);
+                this.busy.set(false);
+                this.set(result);
+                resolve();
+            }).catch(error => {
+                this.error.set(error);
+                this.busy.set(false);
+                this.set(this.initialData as T); // Optionally reset the data to initialData or keep the old data depending on the use case
+                console.error("Error in AsyncState:", error);
+                resolve();
+            });
+        });
+        
+    }
+
     public allInComputed(): ComputedState<{ data: T; busy: boolean; error: Error | null }> {
-        return computed([this, this.busy, this.errorObject], () => ({
+        return computed([this, this.busy, this.error], () => ({
             data: this.busy.get() ? this.initialData as T : this.get(),
             busy: this.busy.get(),
-            error: this.errorObject.get(),
+            error: this.error.get(),
         }));
     }
 }

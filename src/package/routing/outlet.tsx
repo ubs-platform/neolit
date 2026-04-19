@@ -1,5 +1,5 @@
 import { NeolitComponent, NeolitNode } from "../core";
-import { fromState, Stateful } from "../structural";
+import { fromState } from "../structural";
 import { RouteMap } from "./route-map";
 import { Router } from "./router";
 
