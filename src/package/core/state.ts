@@ -13,6 +13,10 @@ export class State<DATA> {
         return this.data;
     }
 
+    /**
+     * Sets the state to a new value. If the new value is different from the current value, it triggers change listeners.
+     * @param _newData The new state value or another State instance to derive the value from.
+     */
     set(_newData: DATA | State<DATA>): void {
         const oldValue = this.data;
         const newData = _newData instanceof State ? _newData.get() : _newData;
