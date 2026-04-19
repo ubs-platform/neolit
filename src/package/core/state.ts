@@ -1,5 +1,3 @@
-import { DynamicQueue } from "@ubs-platform/dynamic-queue";
-
 export type StateOrPlain<T> = State<T> | T;
 export class State<DATA> {
 
@@ -205,7 +203,6 @@ export function isTheyEqualArrays<T>(a: StateOrPlain<T>[], b: StateOrPlain<T>[])
 }
 
 export class AsyncState<T> extends State<T> {
-    readonly queue = new DynamicQueue();
     activePromise: Promise<T> | null = null;
     busy = state(false);
     initialData: T | undefined;
@@ -223,14 +220,13 @@ export class AsyncState<T> extends State<T> {
     }
 
     public setAsync(promise: Promise<T>): void {
-        this.queue.push(() => {
-            this._setAsync(promise);
-        });
+        this._setAsync(promise);
+
     }
 
     private _setAsync(promise: Promise<T>): Promise<void> {
-        if (this.activePromise === promise) {
-            return Promise.resolve(); // Same promise, do nothing
+        if (this.busy.get()) {
+            console.warn("AsyncState is already busy with another promise. Overwriting with a new promise.");
         }
 
         this.error.set(null); // Reset error state when starting a new async operation
@@ -251,7 +247,7 @@ export class AsyncState<T> extends State<T> {
                 resolve();
             });
         });
-        
+
     }
 
     public allInComputed(): ComputedState<{ data: T; busy: boolean; error: Error | null }> {
