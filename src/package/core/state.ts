@@ -135,10 +135,10 @@ export class State<DATA> {
 
 export class ComputedState<DATA> extends State<DATA> {
 
-    private computeFn: () => DATA;
+    private computeFn: (stateValues: any[]) => DATA;
 
-    constructor(statesListened: StateOrPlain<any>[], computeFn: () => DATA) {
-        super(computeFn());
+    constructor(private statesListened: StateOrPlain<any>[], computeFn: (...stateValues: any[]) => DATA) {
+        super(computeFn(statesListened.map(stateOrPlain => getStateValue(stateOrPlain))));
         this.computeFn = computeFn;
         for (const stateOrPlain of statesListened) {
             if (stateOrPlain instanceof State) {
@@ -149,7 +149,7 @@ export class ComputedState<DATA> extends State<DATA> {
 
     recompute(): void {
         const oldValue = this.get();
-        const newData = this.computeFn();
+        const newData = this.computeFn(this.statesListened.map(stateOrPlain => getStateValue(stateOrPlain)));
         const triggerFlag = this.determineTriggerIsRequired(newData);
         (this as any).data = newData;
 
