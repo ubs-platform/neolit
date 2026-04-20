@@ -4,6 +4,7 @@ export class State<DATA> {
     private data: DATA;
 
     changeListeners: Array<(newData: DATA, oldData?: DATA) => void> = [];
+    stateTwoBind?: State<DATA> | null = null;
 
     constructor(initialData: DATA) {
         this.data = initialData;
@@ -17,7 +18,7 @@ export class State<DATA> {
      * Sets the state to a new value. If the new value is different from the current value, it triggers change listeners.
      * @param _newData The new state value or another State instance to derive the value from.
      */
-    set(_newData: DATA | State<DATA>): void {
+    set(_newData: DATA): void {
         const oldValue = this.data;
         const newData = _newData instanceof State ? _newData.get() : _newData;
         const triggerFlag = this.determineTriggerIsRequired(newData);
@@ -26,17 +27,30 @@ export class State<DATA> {
         if (triggerFlag) {
             this.changeListeners.forEach(listener => listener(this.data, oldValue));
         }
-
-        if (_newData instanceof State) {
-            _newData.subscribe((newData) => {
-                const triggerFlag = this.determineTriggerIsRequired(newData);
-                this.data = newData;
-
-                if (triggerFlag) {
-                    this.changeListeners.forEach(listener => listener(this.data, oldValue));
-                }
-            });
+        if (this.stateTwoBind) {
+            this.stateTwoBind.set(this.data);
         }
+    }
+
+    clearTwoWayBinding(): void {
+        if (this.stateTwoBind) {
+            this.stateTwoBind.stateTwoBind = null;
+            this.stateTwoBind = null;
+        }
+    }
+
+    setTwoWay(newState: State<DATA>): void {
+        this.set(newState.get());
+        this.stateTwoBind = newState;
+        newState.subscribe((newData) => {
+            const triggerFlag = this.determineTriggerIsRequired(newData);
+            this.data = newData;
+
+            if (triggerFlag) {
+                this.changeListeners.forEach(listener => listener(this.data, newData));
+            }
+        });
+        newState.stateTwoBind = this;
     }
 
     determineTriggerIsRequired(newData: DATA) {
