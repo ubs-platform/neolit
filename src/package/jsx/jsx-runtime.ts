@@ -14,13 +14,6 @@ function bindToStateOrPlain(element: HTMLElement, stateOrPlain: StateOrPlain<any
         const cb = () => callback(getStateValue(stateOrPlain));
         stateOrPlain.subscribe(cb);
         callback(getStateValue(stateOrPlain)); 
-        // const orginialRemoveChild = element.removeChild
-        // element.removeChild = function(child) {
-        //     if (child instanceof Text && child.textContent === String(getStateValue(stateOrPlain))) {
-        //         stateOrPlain.unsubscribe(cb);
-        //     }
-        //     return orginialRemoveChild.call(this, child);
-        // }
         element.addEventListener("close", () => stateOrPlain.unsubscribe(cb));
     } else {
         callback(stateOrPlain);
@@ -108,6 +101,7 @@ function applyClassName(el: HTMLElement, value: unknown): void {
         // classKey'i ekle veya çıkar. Yani classValue true ise classKey'i ekle, false ise classKey'i çıkar.
         for (const [classKey, classValue] of Object.entries(value!)) {
             bindToStateOrPlain(el, classValue as StateOrPlain<any>, (v) => {
+                console.info("Applying class ", classKey, " with value ", v);
                 el.classList.toggle(classKey, !!v);
             });
         }
