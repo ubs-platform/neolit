@@ -184,7 +184,7 @@ export class CombinedState extends State<CombinedStateUpdateInfo> {
 
 }
 
-export function computed<DATA>(statesListened: StateOrPlain<any>[], computeFn: () => DATA): ComputedState<DATA> {
+export function computed<DATA>(statesListened: StateOrPlain<any>[], computeFn: (values: any[]) => DATA): ComputedState<DATA> {
     return new ComputedState(statesListened, computeFn);
 }
 
