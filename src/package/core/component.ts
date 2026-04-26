@@ -9,7 +9,7 @@ export abstract class NeolitComponent<PROPERTIES = Record<string, any>> {
   private _unsubscribers: Array<() => void> = [];
   private key: string;
   public properties: Partial<PROPERTIES> = {};
-  // public abstract initialProperties?: Partial<PROPERTIES>;
+  public initialProperties?: Partial<PROPERTIES>;
 
   // Property'ler sonra uygulanıyor, böylece component instance'ı oluşturulduktan sonra props'lara erişilebilir oluyor. Bu sayede onInit gibi lifecycle metodlarında props'lara erişim sağlanabilir.
   /**
@@ -20,16 +20,17 @@ export abstract class NeolitComponent<PROPERTIES = Record<string, any>> {
    * @param key
    */
   constructor(properties?: PROPERTIES, key?: string) {
-    properties;
+    this.initialProperties = properties;
     // propertyler sonradan atanıyor ama jsx tagte alıyor propsları o yüzden kızıyor. Eğer kullanmazsam da eslint hata veriyor
     this.key = key ?? crypto.randomUUID();
     NeolitComponent.componentInstances.set(this.key, this);
   }
 
-  assignProperties(newProperties: Partial<PROPERTIES>): void {
+  assignProperties(): void {
     // if (this.initialProperties) {
     //     this.properties = this.initialProperties;
     // }
+    const newProperties = this.initialProperties;
     if (newProperties) {
       Object.entries(newProperties).forEach(([propKey, propValue]) => {
         const key = propKey as keyof PROPERTIES;
@@ -160,11 +161,11 @@ export abstract class NeolitComponent<PROPERTIES = Record<string, any>> {
   }
 
   static constructInitialize<T>(
-    cpClass: new () => NeolitComponent<T>,
+    cpClass: new (properties: T) => NeolitComponent<T>,
     properties: T,
   ) {
-    const instance = new cpClass();
-    instance.assignProperties(properties);
+    const instance = new cpClass(properties);
+    instance.assignProperties();
     instance.onInit?.();
     return instance;
   }

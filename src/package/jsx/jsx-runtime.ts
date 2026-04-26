@@ -202,9 +202,9 @@ export function jsx(
   const { children, ...attrs } = props ?? {};
 
   if (typeof tag === "function") {
-    const instance = new tag();
+    const instance = new tag(props);
     console.info("Component yaratıldıktan sonra props: ", instance.properties);
-    instance.assignProperties(props ?? {});
+    instance.assignProperties();
     instance.onInit?.();
     console.info(
       "Component yaratıldıktan ve props atandıktan sonra props: ",
