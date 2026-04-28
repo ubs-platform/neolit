@@ -16,7 +16,7 @@ export class State<DATA> {
 
   constructor(initialData: DATA, defaultOptions?: StateOptions) {
     this.data = initialData;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || {notifyIncomingWhenSetState: true, subscribeIncomingWhenSetState: true};
   }
 
   get(): DATA {
