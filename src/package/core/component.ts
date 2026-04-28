@@ -5,7 +5,7 @@ export abstract class NeolitComponent<PROPERTIES = Record<string, any>> {
   static isNeolitComponent = true;
   static componentInstances = new Map<string, NeolitComponent>();
   private _mountTarget: HTMLElement | null = null;
-  private _currentElement: NeolitNode[] | NeolitNode | null = null;
+  private _currentElement: NeolitNode[] = [];
   private _unsubscribers: Array<() => void> = [];
   private key: string;
   public properties: Partial<PROPERTIES> = {};
@@ -72,85 +72,65 @@ export abstract class NeolitComponent<PROPERTIES = Record<string, any>> {
     NeolitComponent.componentInstances.delete(this.key);
   }
 
-  mount(target: HTMLElement): NeolitNode | NeolitNode[] | null {
+  private regularizeIncomingElements(incomingElements: NeolitComponent | NeolitNode | NeolitNode[] | null | undefined): NeolitNode[] {
+    const incomingElementsConverted: NeolitNode[] = []
+    if (incomingElements instanceof NeolitComponent) {
+      const el = this.regularizeIncomingElements(incomingElements.render());
+      incomingElementsConverted.push(...el);
+
+    } else if (Array.isArray(incomingElements)) {
+      incomingElementsConverted.push(...incomingElements);
+    } else if (incomingElements != null) {
+      incomingElementsConverted.push(incomingElements as NeolitNode);
+    }
+    return incomingElementsConverted;
+  }
+
+  mount(target: HTMLElement): NeolitNode[] {
     this._mountTarget = target;
     target.attributes.setNamedItem(
       document.createAttribute("data-neolit-mounted"),
     );
     target.setAttribute("data-neolit-key", this.key);
 
-    let currentEls = this.render();
+    let incomingElements = this.render();
 
     // Eğer currentEls bir NeolitComponent ise, componentInstance'ın render metodunu çağırarak gerçek elementleri elde edelim.
-    while (currentEls && currentEls instanceof NeolitComponent) {
-      currentEls = currentEls.render();
+    while (incomingElements && incomingElements instanceof NeolitComponent) {
+      incomingElements = incomingElements.render();
     }
     // Eğer initialElement sağlanmışsa ve sonradan render edilen elementin tipi initialElement ile uyuşmuyorsa, bu durumun render işlemi üzerinde sorunlara yol açabileceği konusunda bir uyarı verelim.
-    if (
-      this._currentElement != null &&
-      typeof currentEls !== typeof this._currentElement
-    ) {
-      console.error(
-        "NEOLIT : Initial element type does not match rendered element type. This may cause issues with rendering. Please ensure that the initial element and rendered element are of the same type (either both should be NeolitNode or both should be NeolitNode[]).",
-      );
-    }
-    if (
-      this._currentElement &&
-      this._currentElement instanceof NeolitComponent
-    ) {
-      console.warn(
-        "NEOLIT : Detected a component instance in the rendered output. This may indicate that a component is being returned directly from the render method instead of its rendered output. Please ensure that the render method returns the output of the component's render method, not the component instance itself.",
-      );
-    }
-    // Artık component render result'ı işlenmiş olduğundan, currentEls'in NeolitNode veya NeolitNode[] olduğunu varsayabiliriz.
-    this._currentElement = currentEls as NeolitNode | NeolitNode[] | null;
+    const incomingElementsConverted = this.regularizeIncomingElements(incomingElements);
 
-    if (!Array.isArray(this._currentElement)) {
-      if (!target.contains(this._currentElement as Node)) {
-        target.appendChild(this._currentElement as Node);
-      }
-      return this._currentElement;
-    }
-
-    (this._currentElement as NeolitNode[]).forEach((el) => {
+    incomingElementsConverted.forEach((el) => {
       if (!target.contains(el)) {
         target.appendChild(el);
       }
-    });
+    })
+    this._currentElement = incomingElementsConverted;
+    return incomingElementsConverted;
 
-    return this._currentElement;
   }
 
+
   private _rerender(): void {
-    if (!this._mountTarget || !this._currentElement) return;
+    if (!this._mountTarget || (!this._currentElement || this._currentElement.length == 0)) return;
     let newElement = this.render();
     // Eğer currentEls bir NeolitComponent ise, componentInstance'ın render metodunu çağırarak gerçek elementleri elde edelim.
-    if (newElement && newElement instanceof NeolitComponent) {
-      newElement = newElement.render();
-    }
-    if (Array.isArray(this._currentElement)) {
-      this._currentElement.forEach((el) => {
-        if (el.parentNode === this._mountTarget) {
-          this._mountTarget!.removeChild(el);
-        }
-      });
-
-      (newElement as NeolitNode[]).forEach((el) => {
-        if (!this._mountTarget!.contains(el)) {
-          this._mountTarget!.appendChild(el);
-        }
-      });
-    } else {
-      if (newElement === null) {
-        this._mountTarget.removeChild(this._currentElement as Node);
-      } else {
-        this._mountTarget.replaceChild(
-          newElement as Node,
-          this._currentElement as Node,
-        );
+    const newElementConverted = this.regularizeIncomingElements(newElement);
+    this._currentElement.forEach((el) => {
+      if (el.parentNode === this._mountTarget) {
+        this._mountTarget!.removeChild(el);
       }
-    }
-    this._currentElement = newElement as NeolitNode | NeolitNode[] | null;
+    });
+
+    (newElementConverted as NeolitNode[]).forEach((el) => {
+      if (!this._mountTarget!.contains(el)) {
+        this._mountTarget!.appendChild(el);
+      }
+    });
+
+    this._currentElement = newElementConverted as NeolitNode[];
   }
 
   public rerender(): void {
