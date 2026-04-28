@@ -13,7 +13,7 @@ export interface InputProperties {
 
 export class Input extends NeolitComponent {
   properties: InputProperties = {
-    value: state(""),
+    value: state("", { notifyIncomingWhenSetState: true, subscribeIncomingWhenSetState: true }),
     onInput: () => {},
     placeholder: "",
   };

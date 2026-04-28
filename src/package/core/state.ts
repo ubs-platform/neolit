@@ -5,6 +5,7 @@ export interface StateOptions {
 }
 export class State<DATA> {
   private data: DATA;
+  dataPreviousHash: string | null = null;
 
   changeListeners: Array<(newData: DATA, oldData?: DATA) => void> = [];
   boundState?: State<DATA> | null = null;
@@ -15,13 +16,22 @@ export class State<DATA> {
 
   constructor(initialData: DATA, defaultOptions?: StateOptions) {
     this.data = initialData;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || {notifyIncomingWhenSetState: true, subscribeIncomingWhenSetState: true};
   }
 
   get(): DATA {
     return this.data;
   }
 
+  update(updater: (currentData: DATA) => DATA): void {
+    const newData = updater(this.data);
+    const triggerFlag = this.determineTriggerIsRequired(newData);
+    this.data = newData;
+    this.dataPreviousHash = JSON.stringify(newData);
+    if (triggerFlag) {
+      this.changeListeners.forEach((listener) => listener(newData, this.data));
+    }
+  }
   /**
    * Sets the state to a new value. If the new value is different from the current value, it triggers change listeners.
    * @param _newData The new state value or another State instance to derive the value from.
@@ -43,6 +53,7 @@ export class State<DATA> {
     const newData = _newData instanceof State ? _newData.get() : _newData;
     const triggerFlag = this.determineTriggerIsRequired(newData);
     this.data = newData;
+    this.dataPreviousHash = JSON.stringify(newData);
 
     if (triggerFlag) {
       this.changeListeners.forEach((listener) => listener(this.data, oldValue));
@@ -78,22 +89,18 @@ export class State<DATA> {
   }
 
   determineTriggerIsRequired(newData: DATA) {
+    const newDataHash = JSON.stringify(newData);
     return (
       typeof newData === "object" ||
       Array.isArray(newData) ||
-      this.data !== newData
+      this.data !== newData ||
+      newDataHash?.length !== this.dataPreviousHash?.length ||
+      newDataHash !== this.dataPreviousHash
     );
+
+
   }
 
-  update(updater: (currentData: DATA) => DATA): void {
-    const newData = updater(this.data);
-    const triggerFlag = this.determineTriggerIsRequired(newData);
-    this.data = newData;
-
-    if (triggerFlag) {
-      this.changeListeners.forEach((listener) => listener(newData, this.data));
-    }
-  }
 
   map<NEW_DATA>(mapper: (currentData: DATA) => NEW_DATA): State<NEW_DATA> {
     const mappedState = new State<NEW_DATA>(mapper(this.data));
