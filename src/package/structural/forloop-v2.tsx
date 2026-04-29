@@ -22,6 +22,9 @@ export class Forv2<T> extends NeolitComponent<ForProperties<T>> {
     if (isState(this.properties.items)) {
       this.properties.items.subscribe(() => this.onArrayUpdate());
     }
+    // Mevcut değerle ilk populate: subscribe sadece gelecekteki değişiklikleri
+    // yakalar, bu yüzden render() çağrılmadan önce map'i dolduruyoruz.
+    this.onArrayUpdate();
   }
 
   private genKey(item: T, index: number): string | number {
