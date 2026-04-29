@@ -33,13 +33,25 @@ function bindToStateOrPlain(
   }
 }
 
+const BOOLEAN_ATTRS = new Set([
+  "disabled", "checked", "readonly", "required", "multiple", "autofocus",
+  "autoplay", "controls", "default", "defer", "formnovalidate", "hidden",
+  "ismap", "loop", "novalidate", "open", "reversed", "selected",
+]);
+
 function setAttributeWithStateSupport(
   element: HTMLElement,
   attributeKey: string,
   stateOrPlainValue: StateOrPlain<any>,
 ): void {
   bindToStateOrPlain(element, stateOrPlainValue, (value) => {
-    if (value === undefined) {
+    if (BOOLEAN_ATTRS.has(attributeKey)) {
+      if (value && value !== "false") {
+        element.setAttribute(attributeKey, "");
+      } else {
+        element.removeAttribute(attributeKey);
+      }
+    } else if (value === undefined || value === null) {
       element.removeAttribute(attributeKey);
     } else {
       element.setAttribute(attributeKey, String(value));
@@ -161,10 +173,17 @@ function applyClassName(
   }
 }
 
-function applyProps(el: HTMLElement, attrs: Record<string, unknown>): void {
+const PASSIVE_FALSE_EVENTS = new Set(["wheel", "touchmove", "touchstart"]);
+
+
   for (const [key, value] of Object.entries(attrs)) {
     if (key.startsWith("on") && typeof value === "function") {
-      el.addEventListener(key.slice(2).toLowerCase(), value as EventListener);
+      const eventName = key.slice(2).toLowerCase();
+      el.addEventListener(
+        eventName,
+        value as EventListener,
+        PASSIVE_FALSE_EVENTS.has(eventName) ? { passive: false } : undefined,
+      );
     } else if (key === "style" && typeof value === "object") {
       for (const [styleKey, styleValue] of Object.entries(value!)) {
         setStyleWithStateSupport(el, styleKey, styleValue);
@@ -230,6 +249,7 @@ export function jsx(
   toChildArray(children).forEach((child) =>
     appendJsxChildOrFunction(el, child),
   );
+  
   return el;
 }
 
