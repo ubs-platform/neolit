@@ -19,7 +19,8 @@ export abstract class NeolitComponent<PROPERTIES = Record<string, any>> {
    */
   constructor(properties?: PROPERTIES, key?: string) {
     this.initialProperties = properties;
-    this.key = key ?? crypto.randomUUID();
+    // crypto.randomUUID()'nun browser desteği olmadığı durumlar için basit bir UUID oluşturucu ekleyelim.
+    this.key = key ?? (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
     NeolitComponent.componentInstances.set(this.key, this);
   }
 
