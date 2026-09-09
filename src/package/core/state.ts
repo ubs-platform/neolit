@@ -89,13 +89,19 @@ export class State<DATA> {
   }
 
   determineTriggerIsRequired(newData: DATA) {
-    const newDataHash = JSON.stringify(newData);
-    return (
-      typeof newData === "object" ||
+    const phase1 = typeof newData === "object" ||
       Array.isArray(newData) ||
-      this.data !== newData ||
-      newDataHash?.length !== this.dataPreviousHash?.length ||
-      newDataHash !== this.dataPreviousHash
+      this.data !== newData;
+      
+    if (!phase1) {
+      return false;
+    }
+    const newDataHash = JSON.stringify(newData);
+
+    return (
+      phase1 &&
+      (newDataHash?.length !== this.dataPreviousHash?.length ||
+        newDataHash !== this.dataPreviousHash)
     );
 
 
