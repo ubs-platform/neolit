@@ -2,6 +2,7 @@ export type StateOrPlain<T> = State<T> | T;
 export interface StateOptions {
   notifyIncomingWhenSetState?: boolean;
   subscribeIncomingWhenSetState?: boolean;
+  checkDeepEquality?: boolean;
 }
 export class State<DATA> {
   private data: DATA;
@@ -16,7 +17,7 @@ export class State<DATA> {
 
   constructor(initialData: DATA, defaultOptions?: StateOptions) {
     this.data = initialData;
-    this.defaultOptions = defaultOptions || { notifyIncomingWhenSetState: true, subscribeIncomingWhenSetState: true };
+    this.defaultOptions = defaultOptions || { notifyIncomingWhenSetState: true, subscribeIncomingWhenSetState: true, checkDeepEquality: false };
   }
 
   get(): DATA {
@@ -27,7 +28,7 @@ export class State<DATA> {
     const newData = updater(this.data);
     const triggerFlag = this.determineTriggerIsRequired(newData);
     this.data = newData;
-    this.dataPreviousHash = JSON.stringify(newData);
+    this.dataPreviousHash = this.defaultOptions.checkDeepEquality ? JSON.stringify(newData) : null;
     if (triggerFlag) {
       this.changeListeners.forEach((listener) => listener(newData, this.data));
     }
@@ -53,7 +54,7 @@ export class State<DATA> {
     const newData = _newData instanceof State ? _newData.get() : _newData;
     const triggerFlag = this.determineTriggerIsRequired(newData);
     this.data = newData;
-    this.dataPreviousHash = JSON.stringify(newData);
+    this.dataPreviousHash = this.defaultOptions.checkDeepEquality ? JSON.stringify(newData) : null;
 
     if (triggerFlag) {
       this.changeListeners.forEach((listener) => listener(this.data, oldValue));
@@ -92,12 +93,15 @@ export class State<DATA> {
     const phase1 = typeof newData === "object" ||
       Array.isArray(newData) ||
       this.data !== newData;
-      
+
     if (!phase1) {
       return false;
+    } else if (!this.defaultOptions.checkDeepEquality) {
+      return true;
     }
-    const newDataHash = JSON.stringify(newData);
 
+
+    const newDataHash = JSON.stringify(newData);
     return (
       phase1 &&
       (newDataHash?.length !== this.dataPreviousHash?.length ||
