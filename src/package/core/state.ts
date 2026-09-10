@@ -39,8 +39,8 @@ export class State<DATA> {
    */
   set(
     _newData: DATA | State<DATA>,
-    { subscribeIncoming = this.defaultOptions.notifyIncomingWhenSetState || false,
-      notifyIncoming = this.defaultOptions.subscribeIncomingWhenSetState || false
+    { subscribeIncoming = this.defaultOptions.subscribeIncomingWhenSetState || false,
+      notifyIncoming = this.defaultOptions.notifyIncomingWhenSetState || false
     }: { subscribeIncoming?: boolean, notifyIncoming?: boolean } = {},
   ): void {
     if (_newData === this) {
